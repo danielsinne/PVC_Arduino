@@ -63,15 +63,16 @@ void loop(void){
   // READ SENSORS
   // Call temperatureSensor.requestTemperatures() to issue a global temperature and Requests to all devices on the bus (multiple temperature sensors could be connected)
   temperatureSensor.requestTemperatures();
-  int tempC = temperatureSensor.getTempCByIndex(0); //double for more precision
-
-  // Print temperature to serial monitor
-  Serial.print("Celsius temperature: ");
-  Serial.println(tempC); //getTempFByIndex() fot fahrenheit
+  double tempC = temperatureSensor.getTempCByIndex(0); //get temperature
+  tempC = round(tempC*10)/10;
 
   // SERVER
   // Send an HTTP POST request depending on timerDelay
   if ((millis() - lastTime) > timerDelay) {
+    // Print temperature to serial monitor
+    Serial.print("Celsius temperature: ");
+    Serial.println(tempC); //getTempFByIndex() fot fahrenheit
+    
     //check WiFi connection status
     if(WiFi.status()== WL_CONNECTED){
       WiFiClient client;
