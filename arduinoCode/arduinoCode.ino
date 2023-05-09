@@ -7,6 +7,7 @@
 #include <time.h>
 
 // Wifi
+//algo
 const char* ssid = "Oneplus_6";
 const char* password = "12345678";
 
