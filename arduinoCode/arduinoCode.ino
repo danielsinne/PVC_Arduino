@@ -33,6 +33,9 @@ unsigned long timerDelay = 600000;
 // Set timer to 5 seconds (5000)
 //unsigned long timerDelay = 5000;
 
+// When equal 6, 1 hour has passed duh
+unsigned int counter10min = 0;
+
 void setup(void)
 { 
   // Open serial monitor
@@ -60,64 +63,70 @@ void setup(void)
 }
 
 void loop(void){ 
-  // READ SENSORS
-  // Call temperatureSensor.requestTemperatures() to issue a global temperature and Requests to all devices on the bus (multiple temperature sensors could be connected)
-  temperatureSensor.requestTemperatures();
-  double tempC = temperatureSensor.getTempCByIndex(0); //get temperature
-  tempC = round(tempC*10)/10;
-
-  // SERVER
-  // Send an HTTP POST request depending on timerDelay
   if ((millis() - lastTime) > timerDelay) {
-    // Print temperature to serial monitor
-    Serial.print("Celsius temperature: ");
-    Serial.println(tempC); //getTempFByIndex() fot fahrenheit
+    counter10min++;
+    // READ SENSORS
+    // Call temperatureSensor.requestTemperatures() to issue a global temperature and Requests to all devices on the bus (multiple temperature sensors could be connected)
+    temperatureSensor.requestTemperatures();
+    double tempC = temperatureSensor.getTempCByIndex(0); //get temperature
+    tempC = round(tempC*10)/10;
     
-    //check WiFi connection status
-    if(WiFi.status()== WL_CONNECTED){
-      WiFiClient client;
-      HTTPClient http;
-      
-      // Your Domain name with URL path or IP address with path
-      http.begin(client, serverName);
+    lastTime = millis();
 
-      // Calculate current time
-      time_t now;
-      time(&now);
-      t = localtime(&now);
-      char currentTime[sizeof "2011-10-08T07:07:09"];
-      strftime (currentTime, sizeof currentTime,"%FT%TZ",t);
+    // SERVER
+    // Send an HTTP POST request depending on timerDelay
+    if (counter10min >= 6) {
+      counter10min = 0;
+      
+      // Print temperature to serial monitor
+      Serial.print("Celsius temperature: ");
+      Serial.println(tempC); //getTempFByIndex() fot fahrenheit
+    
+       //check WiFi connection status
+      if(WiFi.status()== WL_CONNECTED){
+        WiFiClient client;
+        HTTPClient http;
+      
+        // Your Domain name with URL path or IP address with path
+        http.begin(client, serverName);
+
+        // Calculate current time
+        time_t now;
+        time(&now);
+        t = localtime(&now);
+        char currentTime[sizeof "2011-10-08T07:07:09"];
+        strftime (currentTime, sizeof currentTime,"%FT%TZ",t);
       
 
-      // JSON document
-      DynamicJsonDocument doc(200);
-      doc["temperatureValue"] = tempC;
-      doc["localDateTime"] = currentTime;
-      doc["inputSource"] = "ARDUINO";
-      String json;
-      serializeJson(doc, json);
+        // JSON document
+        DynamicJsonDocument doc(200);
+        doc["temperatureValue"] = tempC;
+        doc["localDateTime"] = currentTime;
+        doc["inputSource"] = "ARDUINO";
+        String json;
+        serializeJson(doc, json);
         
-      // If you need an HTTP request with a content type: application/json, use the following:
-      http.addHeader("Content-Type", "application/json");
-      int httpResponseCode = http.POST(json);
+        // If you need an HTTP request with a content type: application/json, use the following:
+        http.addHeader("Content-Type", "application/json");
+        int httpResponseCode = http.POST(json);
 
-      // Read response
-      if (httpResponseCode>0) {
-        Serial.print("HTTP Response code: ");
-        Serial.println(httpResponseCode);
-        String payload = http.getString();
-        Serial.println(payload);
+        // Read response
+        if (httpResponseCode>0) {
+          Serial.print("HTTP Response code: ");
+          Serial.println(httpResponseCode);
+          String payload = http.getString();
+          Serial.println(payload);
+        }
+        else {
+          Serial.print("Error code: ");
+          Serial.println(httpResponseCode);
+        }
+        // Free resources
+        http.end();
       }
       else {
-        Serial.print("Error code: ");
-        Serial.println(httpResponseCode);
+        Serial.println("WiFi Disconnected");
       }
-      // Free resources
-      http.end();
     }
-    else {
-      Serial.println("WiFi Disconnected");
-    }
-    lastTime = millis();
   }
 }
