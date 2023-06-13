@@ -69,10 +69,14 @@ void loop(void){
     // Call temperatureSensor.requestTemperatures() to issue a global temperature and Requests to all devices on the bus (multiple temperature sensors could be connected)
     temperatureSensor.requestTemperatures();
     double tempC = temperatureSensor.getTempCByIndex(0); //get temperature
+    Serial.print("Temp before rounding: ");
+    Serial.println(tempC);
     tempC = round(tempC*10)/10;
+    Serial.print("Temp after rounding: ");
+    Serial.println(tempC);
     tempCTotal += tempC;
 
-    delay(600000);
+    delay(5000);//600000
   }
 
   // SERVER
@@ -129,5 +133,18 @@ void loop(void){
   }
   else {
     Serial.println("WiFi Disconnected");
+
+    Serial.println("Attempting to reconnect");
+    //Try reconnecting
+    WiFi.begin(ssid, password);
+    // Wait for connection
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.println(".");
+    }
+    Serial.print("Connected to ");
+    Serial.println(ssid);
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
   }
 }
