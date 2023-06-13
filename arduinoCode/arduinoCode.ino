@@ -76,7 +76,7 @@ void loop(void){
     Serial.println(tempC);
     tempCTotal += tempC;
 
-    delay(5000);//600000
+    delay(600000);
   }
 
   // SERVER
